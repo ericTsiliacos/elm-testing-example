@@ -35,6 +35,6 @@ view model =
     div []
         [ div [] [ text ("count: " ++ (toString model.count)) ]
         , div [] [ text ("multiplier: " ++ (toString (model.count * 2))) ]
-        , button [ onClick Increment ] [ text "increment" ]
-        , button [ onClick Decrement ] [ text "decrement" ]
+        , button [ onClick Increment ] [ text "+" ]
+        , button [ onClick Decrement ] [ text "-" ]
         ]
