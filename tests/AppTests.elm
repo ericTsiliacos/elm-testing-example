@@ -46,58 +46,59 @@ clickDecrement =
     decrementButton >> simulate click
 
 
+view =
+    testView App.view
+
+
+run =
+    uiTest App.view App.update
+
+
 suite : Test
 suite =
-    let
-        view =
-            testView App.view
-
-        expectView expectation =
-            TestSupport.expect (view >> expectation)
-
-        run =
-            uiTest App.view App.update
-    in
-        describe "Application"
-            [ describe "initial state"
-                [ test "current count is 0" <|
-                    \_ ->
-                        model
-                            |> (view >> counter)
-                            |> has [ text "0" ]
-                ]
-            , describe "clicking on the increment button"
-                [ test "increments the current count by 1" <|
-                    \_ ->
-                        model
-                            |> run clickIncrement
-                            |> andThen (run clickIncrement)
-                            |> andThen (run clickIncrement)
-                            |> expectView
-                                (counter
-                                    >> has [ text "3" ]
-                                )
-                ]
-            , describe "clicking on the decrement button"
-                [ test "decrements the current count by 1" <|
-                    \_ ->
-                        { model | count = 3 }
-                            |> run clickDecrement
-                            |> andThen (run clickDecrement)
-                            |> expectView
-                                (Expect.all
+    describe "Application"
+        [ describe "initial state"
+            [ test "current count is 0" <|
+                \_ ->
+                    model
+                        |> (view >> counter)
+                        |> has [ text "0" ]
+            ]
+        , describe "clicking on the increment button"
+            [ test "increments the current count by 1" <|
+                \_ ->
+                    model
+                        |> run clickIncrement
+                        |> andThen (run clickIncrement)
+                        |> andThen (run clickIncrement)
+                        |> TestSupport.expect
+                            (view
+                                >> counter
+                                >> has [ text "3" ]
+                            )
+            ]
+        , describe "clicking on the decrement button"
+            [ test "decrements the current count by 1" <|
+                \_ ->
+                    { model | count = 3 }
+                        |> run clickDecrement
+                        |> andThen (run clickDecrement)
+                        |> TestSupport.expect
+                            (view
+                                >> Expect.all
                                     [ counter >> has [ text "1" ]
                                     , multiplier >> has [ text "2" ]
                                     ]
-                                )
-                , test "counter does not go below 0" <|
-                    \_ ->
-                        { model | count = 1 }
-                            |> run clickDecrement
-                            |> andThen (run clickDecrement)
-                            |> expectView
-                                (counter
-                                    >> has [ text "0" ]
-                                )
-                ]
+                            )
+            , test "counter does not go below 0" <|
+                \_ ->
+                    { model | count = 1 }
+                        |> run clickDecrement
+                        |> andThen (run clickDecrement)
+                        |> TestSupport.expect
+                            (view
+                                >> counter
+                                >> has [ text "0" ]
+                            )
             ]
+        ]
