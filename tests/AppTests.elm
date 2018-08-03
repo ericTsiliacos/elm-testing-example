@@ -71,30 +71,28 @@ suite =
         , describe "clicking on the increment button"
             [ test "increments the current count by 1" <|
                 \_ ->
-                    (execute
-                        clickIncrement
-                        (foo model)
-                        (counter
-                            >> has [ text "1" ]
-                        )
-                    )
-                        |> Result.andThen
-                            (\testData ->
-                                execute
-                                    clickIncrement
-                                    (foo testData.model)
-                                    (counter
-                                        >> has [ text "2" ]
-                                    )
+                    model
+                        |> foo
+                        |> execute
+                            clickIncrement
+                            (counter
+                                >> has [ text "1" ]
                             )
                         |> Result.andThen
                             (\testData ->
-                                execute
-                                    clickDecrement
-                                    (foo testData.model)
-                                    (counter
-                                        >> has [ text "1" ]
-                                    )
+                                testData.model
+                                    |> foo
+                                    |> execute
+                                        clickIncrement
+                                        (counter >> has [ text "2" ])
+                            )
+                        |> Result.andThen
+                            (\testData ->
+                                testData.model
+                                    |> foo
+                                    |> execute
+                                        clickDecrement
+                                        (counter >> has [ text "1" ])
                             )
                         |> runTests
             ]

@@ -22,7 +22,7 @@ seed view update model =
     }
 
 
-execute library testData expectation =
+execute library expectation testData =
     let
         view =
             testData.view testData.model
