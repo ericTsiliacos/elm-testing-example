@@ -2,6 +2,11 @@ module App exposing (..)
 
 import Html exposing (..)
 import Html.Events exposing (..)
+import Http exposing (..)
+
+
+httpGet request msg =
+    Http.send msg request
 
 
 model =
@@ -12,22 +17,41 @@ type alias Model =
     { count : Int }
 
 
+toCmd : Effect Msg -> Cmd Msg
+toCmd effect =
+    case effect of
+        HttpGet request msg ->
+            httpGet request msg
+
+        None ->
+            Cmd.none
+
+
+type Effect msg
+    = HttpGet (Http.Request String) (Result Error String -> msg)
+    | None
+
+
 type Msg
     = Increment
     | Decrement
+    | NewBook (Result Http.Error String)
 
 
-update : Msg -> Model -> ( Model, Cmd msg )
+update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         Increment ->
-            ( { model | count = model.count + 1 }, Cmd.none )
+            ( { model | count = model.count + 1 }, None )
 
         Decrement ->
             if model.count == 0 then
-                ( model, Cmd.none )
+                ( model, None )
             else
-                ( { model | count = model.count - 1 }, Cmd.none )
+                ( { model | count = model.count - 1 }, None )
+
+        NewBook result ->
+            ( model, None )
 
 
 view : Model -> Html Msg
