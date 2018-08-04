@@ -66,10 +66,10 @@ suite =
                 subject model
                     |> expectView
                         (counter >> has [ text "0" ])
-                    |> executeAction
+                    |> andThenExecuteAction
                         clickIncrement
-                    |> andThen
-                        (executeAction clickIncrement)
+                    |> andThenExecuteAction
+                        clickIncrement
                     |> andThenExpect
                         (counter >> has [ text "2" ])
                     |> andThenExecuteAction

@@ -42,10 +42,11 @@ expectView expectation testData =
         |> fromHtml
         |> expectation
         |> (\newExpectation -> { testData | expectations = newExpectation :: testData.expectations })
+        |> (\testData -> Ok testData)
 
 
 andThenExpect expectation testDataResult =
-    Result.map (expectView expectation) testDataResult
+    Result.andThen (expectView expectation) testDataResult
 
 
 runTests result =
