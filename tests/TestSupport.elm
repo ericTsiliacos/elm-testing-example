@@ -22,6 +22,48 @@ seed view update model =
     }
 
 
+executeAction action testData =
+    let
+        testableView =
+            testData.view testData.model |> fromHtml
+
+        updatedModelResult =
+            testableView
+                |> action
+                |> toResult
+                |> Result.map (testUpdate testData.update testData.model)
+    in
+        Result.map
+            (\updatedModel -> { testData | model = updatedModel })
+            updatedModelResult
+
+
+andThenExecuteAction action testDataResult =
+    Result.andThen
+        (\testData ->
+            testData.model
+                |> testData.view
+                |> fromHtml
+                |> action
+                |> toResult
+                |> Result.map (testUpdate testData.update testData.model)
+                |> Result.map (\updatedModel -> { testData | model = updatedModel })
+        )
+        testDataResult
+
+
+andThenExpectView expectation testDataResult =
+    Result.map
+        (\testData ->
+            testData.model
+                |> testData.view
+                |> fromHtml
+                |> expectation
+                |> (\newExpectation -> { testData | expectations = newExpectation :: testData.expectations })
+        )
+        testDataResult
+
+
 execute library expectation testData =
     let
         view =
@@ -64,20 +106,6 @@ testUpdate update model msg =
 
 testView view model =
     fromHtml (view model)
-
-
-andThenExpect : (a -> Expectation) -> (Result String a -> Expectation)
-andThenExpect expectation model =
-    let
-        result =
-            Result.map expectation model
-    in
-        case result of
-            Ok expectation ->
-                expectation
-
-            Err error ->
-                Expect.fail error
 
 
 expect : (a -> Expectation) -> (Result String a -> Expectation)

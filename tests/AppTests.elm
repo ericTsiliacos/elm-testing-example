@@ -5,7 +5,20 @@ import Test exposing (..)
 import Test.Html.Query as Query exposing (..)
 import Test.Html.Event as Event exposing (..)
 import Test.Html.Selector exposing (..)
-import TestSupport exposing (uiTest, testView, expect, andAlso, andThenExpect, seed, TestData, execute, runTests)
+import TestSupport
+    exposing
+        ( uiTest
+        , testView
+        , expect
+        , andAlso
+        , andThenExpectView
+        , seed
+        , TestData
+        , execute
+        , runTests
+        , executeAction
+        , andThenExecuteAction
+        )
 import Result exposing (andThen, map)
 import App exposing (..)
 
@@ -54,7 +67,7 @@ run =
     uiTest App.view App.update
 
 
-foo =
+subject =
     seed App.view App.update
 
 
@@ -72,28 +85,13 @@ suite =
             [ test "increments the current count by 1" <|
                 \_ ->
                     model
-                        |> foo
-                        |> execute
-                            clickIncrement
-                            (counter
-                                >> has [ text "1" ]
-                            )
-                        |> Result.andThen
-                            (\testData ->
-                                testData.model
-                                    |> foo
-                                    |> execute
-                                        clickIncrement
-                                        (counter >> has [ text "2" ])
-                            )
-                        |> Result.andThen
-                            (\testData ->
-                                testData.model
-                                    |> foo
-                                    |> execute
-                                        clickDecrement
-                                        (counter >> has [ text "1" ])
-                            )
+                        |> subject
+                        |> executeAction clickIncrement
+                        |> andThenExecuteAction clickIncrement
+                        |> andThenExpectView (counter >> has [ text "2" ])
+                        |> andThenExecuteAction clickIncrement
+                        |> andThenExpectView (counter >> has [ text "3" ])
+                        |> andThenExecuteAction clickDecrement
                         |> runTests
             ]
           -- , describe "clicking on the decrement button"
