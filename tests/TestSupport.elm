@@ -32,7 +32,7 @@ run action testData =
         |> Result.map (\updatedModel -> { testData | model = updatedModel })
 
 
-andThenRun action testDataResult =
+thenRun action testDataResult =
     Result.andThen (run action) testDataResult
 
 
@@ -45,11 +45,11 @@ testView expectation testData =
         |> (\testData -> Ok testData)
 
 
-andThenView expectation testDataResult =
+thenView expectation testDataResult =
     Result.andThen (testView expectation) testDataResult
 
 
-runTests result =
+executeTests result =
     case result of
         Ok testData ->
             List.foldr andAlso Expect.pass testData.expectations

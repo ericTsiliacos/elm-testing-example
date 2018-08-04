@@ -7,12 +7,12 @@ import Test.Html.Event as Event exposing (..)
 import Test.Html.Selector exposing (..)
 import TestSupport
     exposing
-        ( andThenView
+        ( thenView
         , testProgram
-        , runTests
+        , executeTests
         , run
         , testView
-        , andThenRun
+        , thenRun
         )
 import Result exposing (andThen, map)
 import App exposing (..)
@@ -65,15 +65,15 @@ suite =
             \_ ->
                 subject model
                     |> run clickIncrement
-                    |> andThenView (counter >> has [ text "1" ])
-                    |> (andThenRun clickDecrement
-                            >> andThenRun clickIncrement
-                            >> andThenRun clickIncrement
+                    |> thenView (counter >> has [ text "1" ])
+                    |> (thenRun clickDecrement
+                            >> thenRun clickIncrement
+                            >> thenRun clickIncrement
                        )
-                    |> andThenView (counter >> has [ text "2" ])
-                    |> (andThenRun clickIncrement >> andThenRun clickIncrement)
-                    |> andThenView (counter >> has [ text "4" ])
-                    |> andThenRun clickDecrement
-                    |> andThenView (counter >> has [ text "3" ])
-                    |> runTests
+                    |> thenView (counter >> has [ text "2" ])
+                    |> (thenRun clickIncrement >> thenRun clickIncrement)
+                    |> thenView (counter >> has [ text "4" ])
+                    |> thenRun clickDecrement
+                    |> thenView (counter >> has [ text "3" ])
+                    |> executeTests
         ]
