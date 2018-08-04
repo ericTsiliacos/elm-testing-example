@@ -7,16 +7,11 @@ import Test.Html.Event as Event exposing (..)
 import Test.Html.Selector exposing (..)
 import TestSupport
     exposing
-        ( uiTest
-        , testView
-        , expect
-        , andAlso
-        , andThenExpectView
-        , seed
-        , TestData
-        , execute
+        ( andThenExpect
+        , testProgram
         , runTests
         , executeAction
+        , expectView
         , andThenExecuteAction
         )
 import Result exposing (andThen, map)
@@ -59,66 +54,33 @@ clickDecrement =
     decrementButton >> simulate click
 
 
-view =
-    testView App.view
-
-
-run =
-    uiTest App.view App.update
-
-
 subject =
-    seed App.view App.update
+    testProgram App.view App.update
 
 
 suite : Test
 suite =
     describe "Application"
-        [ describe "initial state"
-            [ test "current count is 0" <|
-                \_ ->
-                    model
-                        |> (view >> counter)
-                        |> has [ text "0" ]
-            ]
-        , describe "clicking on the increment button"
-            [ test "increments the current count by 1" <|
-                \_ ->
-                    model
-                        |> subject
-                        |> executeAction clickIncrement
-                        |> andThenExecuteAction clickIncrement
-                        |> andThenExpectView (counter >> has [ text "2" ])
-                        |> andThenExecuteAction clickIncrement
-                        |> andThenExpectView (counter >> has [ text "3" ])
-                        |> andThenExecuteAction clickDecrement
-                        |> runTests
-            ]
-          -- , describe "clicking on the decrement button"
-          --     [ test "decrements the current count by 1" <|
-          --         \_ ->
-          --             { model | count = 3 }
-          --                 |> run clickDecrement
-          --                 |> andThen (run clickDecrement)
-          --                 |> TestSupport.expect
-          --                     (view
-          --                         >> Expect.all
-          --                             [ counter >> has [ text "1" ]
-          --                             , multiplier >> has [ text "2" ]
-          --                             ]
-          --                     )
-          --     , test "counter does not go below 0" <|
-          --         \_ ->
-          --             { model | count = 1 }
-          --                 |> run clickDecrement
-          --                 |> andThen (run clickDecrement)
-          --                 |> TestSupport.expect
-          --                     (view
-          --                         >> counter
-          --                         >> has [ text "0" ]
-          --                     )
-          --     , test "foo" <|
-          --         \_ ->
-          --             1 |> Expect.equal 1 |> andAlso (2 |> Expect.equal 2)
-          --     ]
+        [ test "increments the current count by 1" <|
+            \_ ->
+                subject model
+                    |> expectView
+                        (counter >> has [ text "0" ])
+                    |> executeAction
+                        clickIncrement
+                    |> andThen
+                        (executeAction clickIncrement)
+                    |> andThenExpect
+                        (counter >> has [ text "2" ])
+                    |> andThenExecuteAction
+                        clickIncrement
+                    |> andThenExecuteAction
+                        clickIncrement
+                    |> andThenExpect
+                        (counter >> has [ text "4" ])
+                    |> andThenExecuteAction
+                        clickDecrement
+                    |> andThenExpect
+                        (counter >> has [ text "3" ])
+                    |> runTests
         ]

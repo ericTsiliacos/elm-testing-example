@@ -14,7 +14,7 @@ type alias TestData model msg =
     }
 
 
-seed view update model =
+testProgram view update model =
     { expectations = [ Expect.pass ]
     , view = view
     , update = update
@@ -23,67 +23,29 @@ seed view update model =
 
 
 executeAction action testData =
-    let
-        testableView =
-            testData.view testData.model |> fromHtml
-
-        updatedModelResult =
-            testableView
-                |> action
-                |> toResult
-                |> Result.map (testUpdate testData.update testData.model)
-    in
-        Result.map
-            (\updatedModel -> { testData | model = updatedModel })
-            updatedModelResult
+    testData.model
+        |> testData.view
+        |> fromHtml
+        |> action
+        |> toResult
+        |> Result.map (testUpdate testData.update testData.model)
+        |> Result.map (\updatedModel -> { testData | model = updatedModel })
 
 
 andThenExecuteAction action testDataResult =
-    Result.andThen
-        (\testData ->
-            testData.model
-                |> testData.view
-                |> fromHtml
-                |> action
-                |> toResult
-                |> Result.map (testUpdate testData.update testData.model)
-                |> Result.map (\updatedModel -> { testData | model = updatedModel })
-        )
-        testDataResult
+    Result.andThen (executeAction action) testDataResult
 
 
-andThenExpectView expectation testDataResult =
-    Result.map
-        (\testData ->
-            testData.model
-                |> testData.view
-                |> fromHtml
-                |> expectation
-                |> (\newExpectation -> { testData | expectations = newExpectation :: testData.expectations })
-        )
-        testDataResult
+expectView expectation testData =
+    testData.model
+        |> testData.view
+        |> fromHtml
+        |> expectation
+        |> (\newExpectation -> { testData | expectations = newExpectation :: testData.expectations })
 
 
-execute library expectation testData =
-    let
-        view =
-            testData.view testData.model
-
-        updatedModel =
-            (fromHtml view)
-                |> library
-                |> toResult
-                |> Result.map (testUpdate testData.update testData.model)
-    in
-        Result.map
-            (\model ->
-                model
-                    |> testData.view
-                    |> fromHtml
-                    |> expectation
-                    |> (\newExpectation -> { testData | expectations = newExpectation :: testData.expectations, model = model })
-            )
-            updatedModel
+andThenExpect expectation testDataResult =
+    Result.map (expectView expectation) testDataResult
 
 
 runTests result =
@@ -102,28 +64,3 @@ andAlso l r =
 
 testUpdate update model msg =
     Tuple.first (update msg model)
-
-
-testView view model =
-    fromHtml (view model)
-
-
-expect : (a -> Expectation) -> (Result String a -> Expectation)
-expect expectation model =
-    let
-        result =
-            Result.map expectation model
-    in
-        case result of
-            Ok expectation ->
-                expectation
-
-            Err error ->
-                Expect.fail error
-
-
-uiTest view update library model =
-    model
-        |> testView view
-        |> (library >> toResult)
-        |> Result.map (testUpdate update model)
