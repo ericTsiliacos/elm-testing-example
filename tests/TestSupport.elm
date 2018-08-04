@@ -22,7 +22,7 @@ testProgram view update model =
     }
 
 
-executeAction action testData =
+run action testData =
     testData.model
         |> testData.view
         |> fromHtml
@@ -32,11 +32,11 @@ executeAction action testData =
         |> Result.map (\updatedModel -> { testData | model = updatedModel })
 
 
-andThenExecuteAction action testDataResult =
-    Result.andThen (executeAction action) testDataResult
+andThenRun action testDataResult =
+    Result.andThen (run action) testDataResult
 
 
-expectView expectation testData =
+testView expectation testData =
     testData.model
         |> testData.view
         |> fromHtml
@@ -45,8 +45,8 @@ expectView expectation testData =
         |> (\testData -> Ok testData)
 
 
-andThenExpect expectation testDataResult =
-    Result.andThen (expectView expectation) testDataResult
+andThenView expectation testDataResult =
+    Result.andThen (testView expectation) testDataResult
 
 
 runTests result =

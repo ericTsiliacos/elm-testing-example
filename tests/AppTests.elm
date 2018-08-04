@@ -7,12 +7,12 @@ import Test.Html.Event as Event exposing (..)
 import Test.Html.Selector exposing (..)
 import TestSupport
     exposing
-        ( andThenExpect
+        ( andThenView
         , testProgram
         , runTests
-        , executeAction
-        , expectView
-        , andThenExecuteAction
+        , run
+        , testView
+        , andThenRun
         )
 import Result exposing (andThen, map)
 import App exposing (..)
@@ -64,23 +64,16 @@ suite =
         [ test "increments the current count by 1" <|
             \_ ->
                 subject model
-                    |> expectView
-                        (counter >> has [ text "0" ])
-                    |> andThenExecuteAction
-                        clickIncrement
-                    |> andThenExecuteAction
-                        clickIncrement
-                    |> andThenExpect
-                        (counter >> has [ text "2" ])
-                    |> andThenExecuteAction
-                        clickIncrement
-                    |> andThenExecuteAction
-                        clickIncrement
-                    |> andThenExpect
-                        (counter >> has [ text "4" ])
-                    |> andThenExecuteAction
-                        clickDecrement
-                    |> andThenExpect
-                        (counter >> has [ text "3" ])
+                    |> run clickIncrement
+                    |> andThenView (counter >> has [ text "1" ])
+                    |> (andThenRun clickDecrement
+                            >> andThenRun clickIncrement
+                            >> andThenRun clickIncrement
+                       )
+                    |> andThenView (counter >> has [ text "2" ])
+                    |> (andThenRun clickIncrement >> andThenRun clickIncrement)
+                    |> andThenView (counter >> has [ text "4" ])
+                    |> andThenRun clickDecrement
+                    |> andThenView (counter >> has [ text "3" ])
                     |> runTests
         ]
