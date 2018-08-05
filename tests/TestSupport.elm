@@ -6,19 +6,21 @@ import Expect exposing (Expectation)
 import Html exposing (Html)
 
 
-type alias TestData model msg =
+type alias TestData model msg effect =
     { expectations : List Expectation
     , view : model -> Html msg
     , model : model
-    , update : msg -> model -> ( model, Cmd msg )
+    , update : msg -> model -> ( model, effect )
+    , effect : effect
     }
 
 
-testProgram view update model =
+testProgram view update ( model, effect ) =
     { expectations = [ Expect.pass ]
     , view = view
     , update = update
     , model = model
+    , effect = effect
     }
 
 
@@ -28,8 +30,16 @@ run action testData =
         |> fromHtml
         |> action
         |> toResult
-        |> Result.map (testUpdate testData.update testData.model)
-        |> Result.map (\updatedModel -> { testData | model = updatedModel })
+        |> Result.map (\msg -> testData.update msg testData.model)
+        |> Result.map (\( updatedModel, effect ) -> { testData | model = updatedModel, effect = effect })
+
+
+andExpectEffect expectation testDataResult =
+    Result.map
+        (\testData ->
+            { testData | expectations = (expectation testData.effect) :: testData.expectations }
+        )
+        testDataResult
 
 
 thenRun action testDataResult =
@@ -61,7 +71,3 @@ executeTests result =
 andAlso : Expectation -> Expectation -> Expectation
 andAlso l r =
     Expect.all [ always l, always r ] ()
-
-
-testUpdate update model msg =
-    Tuple.first (update msg model)

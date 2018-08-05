@@ -38,11 +38,16 @@ type Msg
     | NewBook (Result Http.Error String)
 
 
+getWarAndPeace : Http.Request String
+getWarAndPeace =
+    Http.getString "https://example.com/books/war-and-peace"
+
+
 update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         Increment ->
-            ( { model | count = model.count + 1 }, None )
+            ( { model | count = model.count + 1 }, HttpGet getWarAndPeace NewBook )
 
         Decrement ->
             if model.count == 0 then

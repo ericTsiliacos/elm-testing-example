@@ -13,6 +13,7 @@ import TestSupport
         , run
         , testView
         , thenRun
+        , andExpectEffect
         )
 import Result exposing (andThen, map)
 import App exposing (..)
@@ -63,8 +64,9 @@ suite =
     describe "Application"
         [ test "increments the current count by 1" <|
             \_ ->
-                subject model
+                subject ( model, None )
                     |> run clickIncrement
+                    |> andExpectEffect (Expect.equal (HttpGet getWarAndPeace NewBook))
                     |> thenView (counter >> has [ text "1" ])
                     |> (thenRun clickDecrement
                             >> thenRun clickIncrement
