@@ -9,12 +9,18 @@ httpGet request msg =
     Http.send msg request
 
 
-model =
-    { count = 0 }
+init =
+    ( { count = 0
+      , bookTitleResult = Ok ""
+      }
+    , None
+    )
 
 
 type alias Model =
-    { count : Int }
+    { count : Int
+    , bookTitleResult : Result Http.Error String
+    }
 
 
 toCmd : Effect Msg -> Cmd Msg
@@ -56,7 +62,7 @@ update msg model =
                 ( { model | count = model.count - 1 }, None )
 
         NewBook result ->
-            ( model, None )
+            ( { model | bookTitleResult = result }, None )
 
 
 view : Model -> Html Msg
@@ -66,4 +72,18 @@ view model =
         , div [] [ text ("multiplier: " ++ (toString (model.count * 2))) ]
         , button [ onClick Increment ] [ text "+" ]
         , button [ onClick Decrement ] [ text "-" ]
+        , bookTitleView model.bookTitleResult
         ]
+
+
+bookTitleView bookTitleResult =
+    let
+        title =
+            case bookTitleResult of
+                Ok bookTitle ->
+                    bookTitle
+
+                Err _ ->
+                    ""
+    in
+        div [] [ text ("book title: " ++ title) ]

@@ -3,7 +3,6 @@ module AppTests exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Test.Html.Query as Query exposing (..)
-import Test.Html.Event as Event exposing (..)
 import Test.Html.Selector exposing (..)
 import TestSupport
     exposing
@@ -13,23 +12,33 @@ import TestSupport
         , run
         , testView
         , thenRun
-        , andExpectEffect
+        , andExpectLastEffect
+        , updateWith
+        , expectView
+        , click
         )
 import Result exposing (andThen, map)
 import App exposing (..)
 
 
-incrementButton =
+increment =
     find
         [ tag "button"
         , containing [ text "+" ]
         ]
 
 
-decrementButton =
+decrement =
     find
         [ tag "button"
         , containing [ text "-" ]
+        ]
+
+
+bookTitle =
+    find
+        [ tag "div"
+        , containing [ text "book title: " ]
         ]
 
 
@@ -47,16 +56,8 @@ multiplier =
         ]
 
 
-clickIncrement =
-    incrementButton >> simulate click
-
-
-clickDecrement =
-    decrementButton >> simulate click
-
-
-subject =
-    testProgram App.view App.update
+application =
+    testProgram App.view App.update App.init
 
 
 suite : Test
@@ -64,18 +65,21 @@ suite =
     describe "Application"
         [ test "increments the current count by 1" <|
             \_ ->
-                subject ( model, None )
-                    |> run clickIncrement
-                    |> andExpectEffect (Expect.equal (HttpGet getWarAndPeace NewBook))
-                    |> thenView (counter >> has [ text "1" ])
-                    |> (thenRun clickDecrement
-                            >> thenRun clickIncrement
-                            >> thenRun clickIncrement
-                       )
-                    |> thenView (counter >> has [ text "2" ])
-                    |> (thenRun clickIncrement >> thenRun clickIncrement)
-                    |> thenView (counter >> has [ text "4" ])
-                    |> thenRun clickDecrement
-                    |> thenView (counter >> has [ text "3" ])
+                application
+                    |> click increment
+                    |> andExpectLastEffect (Expect.equal (HttpGet getWarAndPeace NewBook))
+                    |> andThen (updateWith (NewBook (Ok "hello world")))
+                    |> andThen (expectView (bookTitle >> has [ text "hello world" ]))
+                    |> andThen (click increment)
+                    |> andThen
+                        (expectView
+                            (Expect.all
+                                [ counter >> has [ text "2" ]
+                                , multiplier >> has [ text "4" ]
+                                ]
+                            )
+                        )
+                    |> andThen (click decrement)
+                    |> andThen (expectView (counter >> has [ text "1" ]))
                     |> executeTests
         ]
