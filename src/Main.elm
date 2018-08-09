@@ -6,8 +6,12 @@ import Html
 
 main =
     Html.program
-        { init = App.init >> Tuple.mapSecond toCmd
-        , update = App.update >> Tuple.mapSecond toCmd
+        { init = App.init |> Tuple.mapSecond App.toCmd
+        , update =
+            (\msg model ->
+                App.update msg model
+                    |> (\( model, effect ) -> ( model, App.toCmd effect ))
+            )
         , subscriptions = always Sub.none
         , view = App.view
         }
