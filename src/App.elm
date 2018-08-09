@@ -9,8 +9,8 @@ httpGet request msg =
     Http.send msg request
 
 
-model =
-    { count = 0 }
+init =
+    ( { count = 0 }, None )
 
 
 type alias Model =

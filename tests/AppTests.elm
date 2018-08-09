@@ -5,17 +5,7 @@ import Test exposing (..)
 import Test.Html.Query as Query exposing (..)
 import Test.Html.Event as Event exposing (..)
 import Test.Html.Selector exposing (..)
-import TestSupport
-    exposing
-        ( thenView
-        , testProgram
-        , executeTests
-        , run
-        , testView
-        , thenRun
-        , andExpectEffect
-        )
-import Result exposing (andThen, map)
+import TestContext exposing (clickButton, expectView, create, expectLastEffect)
 import App exposing (..)
 
 
@@ -55,27 +45,17 @@ clickDecrement =
     decrementButton >> simulate click
 
 
-subject =
-    testProgram App.view App.update
-
-
 suite : Test
 suite =
     describe "Application"
         [ test "increments the current count by 1" <|
             \_ ->
-                subject ( model, None )
-                    |> run clickIncrement
-                    |> andExpectEffect (Expect.equal (HttpGet getWarAndPeace NewBook))
-                    |> thenView (counter >> has [ text "1" ])
-                    |> (thenRun clickDecrement
-                            >> thenRun clickIncrement
-                            >> thenRun clickIncrement
-                       )
-                    |> thenView (counter >> has [ text "2" ])
-                    |> (thenRun clickIncrement >> thenRun clickIncrement)
-                    |> thenView (counter >> has [ text "4" ])
-                    |> thenRun clickDecrement
-                    |> thenView (counter >> has [ text "3" ])
-                    |> executeTests
+                create
+                    { init = App.init
+                    , update = App.update
+                    , view = App.view
+                    }
+                    |> simulate click (App.view |> fromHtml |> incrementButton)
+                    |> expectLastEffect (Expect.equal (HttpGet getWarAndPeace NewBook))
+          -- |> expectView (counter >> has [ text "1" ])
         ]
