@@ -12,11 +12,7 @@ import TestSupport
         , click
         , executeTests
         , expectView
-        , run
         , testProgram
-        , testView
-        , thenRun
-        , thenView
         , updateWith
         )
 

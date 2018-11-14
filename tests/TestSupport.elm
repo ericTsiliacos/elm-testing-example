@@ -1,4 +1,4 @@
-module TestSupport exposing (Program(..), TestData, andAlso, andExpectLastEffect, click, executeTests, expectView, run, testProgram, testView, thenRun, thenView, updateWith, verify)
+module TestSupport exposing (andExpectLastEffect, click, executeTests, expectView, testProgram, updateWith)
 
 import Expect exposing (Expectation)
 import Html exposing (Html)
@@ -46,21 +46,10 @@ andExpectLastEffect expectation testDataResult =
         testDataResult
 
 
-thenRun action testDataResult =
-    Result.andThen (run action) testDataResult
-
-
 testView expectation testData =
     testData.model
         |> testData.view
         |> fromHtml
-        |> expectation
-        |> (\newExpectation -> { testData | expectations = newExpectation :: testData.expectations })
-        |> Ok
-
-
-verify expectation testData =
-    Program { model = testData.model, view = testData.model |> testData.view |> fromHtml }
         |> expectation
         |> (\newExpectation -> { testData | expectations = newExpectation :: testData.expectations })
         |> Ok
@@ -73,10 +62,6 @@ updateWith msg testData =
 
 expectView expectation testData =
     testView expectation testData
-
-
-thenView expectation testDataResult =
-    Result.andThen (testView expectation) testDataResult
 
 
 click element =
