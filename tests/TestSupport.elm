@@ -13,13 +13,14 @@ import Test.Html.Event as Event exposing (Event, click, simulate, toResult)
 import Test.Html.Query exposing (Single, fromHtml)
 
 
-type alias TestData model msg effect =
-    { expectations : List Expectation
-    , view : model -> Html msg
-    , model : model
-    , update : msg -> model -> ( model, effect )
-    , effect : effect
-    }
+type TestData model msg effect
+    = TestData
+        { expectations : List Expectation
+        , view : model -> Html msg
+        , model : model
+        , update : msg -> model -> ( model, effect )
+        , effect : effect
+        }
 
 
 testProgram :
@@ -33,12 +34,13 @@ testProgram { view, update, init } =
         ( model, effect ) =
             init
     in
-    { expectations = [ Expect.pass ]
-    , view = view
-    , update = update
-    , model = model
-    , effect = effect
-    }
+    TestData
+        { expectations = [ Expect.pass ]
+        , view = view
+        , update = update
+        , model = model
+        , effect = effect
+        }
 
 
 run :
@@ -46,13 +48,17 @@ run :
     -> TestData model msg effect
     -> Result String (TestData model msg effect)
 run action testData =
-    testData.model
-        |> testData.view
+    let
+        (TestData internalTestData) =
+            testData
+    in
+    internalTestData.model
+        |> internalTestData.view
         |> fromHtml
         |> action
         |> toResult
-        |> Result.map (\msg -> testData.update msg testData.model)
-        |> Result.map (\( updatedModel, effect ) -> { testData | model = updatedModel, effect = effect })
+        |> Result.map (\msg -> internalTestData.update msg internalTestData.model)
+        |> Result.map (\( updatedModel, effect ) -> TestData { internalTestData | model = updatedModel, effect = effect })
 
 
 andExpectLastEffect :
@@ -62,7 +68,11 @@ andExpectLastEffect :
 andExpectLastEffect expectation testDataResult =
     Result.map
         (\testData ->
-            { testData | expectations = expectation testData.effect :: testData.expectations }
+            let
+                (TestData internalTestData) =
+                    testData
+            in
+            TestData { internalTestData | expectations = expectation internalTestData.effect :: internalTestData.expectations }
         )
         testDataResult
 
@@ -72,11 +82,15 @@ testView :
     -> TestData model msg effect
     -> Result String (TestData model msg effect)
 testView expectation testData =
-    testData.model
-        |> testData.view
+    let
+        (TestData internalTestData) =
+            testData
+    in
+    internalTestData.model
+        |> internalTestData.view
         |> fromHtml
         |> expectation
-        |> (\newExpectation -> { testData | expectations = newExpectation :: testData.expectations })
+        |> (\newExpectation -> TestData { internalTestData | expectations = newExpectation :: internalTestData.expectations })
         |> Ok
 
 
@@ -85,8 +99,20 @@ updateWith :
     -> TestData model msg effect
     -> Result String (TestData model msg effect)
 updateWith msg testData =
-    testData.update msg testData.model
-        |> (\( model, effect ) -> Ok { testData | model = model, effect = effect })
+    let
+        (TestData internalTestData) =
+            testData
+    in
+    internalTestData.update msg internalTestData.model
+        |> (\( model, effect ) ->
+                Ok
+                    (TestData
+                        { internalTestData
+                            | model = model
+                            , effect = effect
+                        }
+                    )
+           )
 
 
 expectView :
@@ -108,8 +134,8 @@ click element =
 executeTests : Result String (TestData model msg effect) -> Expectation
 executeTests result =
     case result of
-        Ok testData ->
-            List.foldr andAlso Expect.pass testData.expectations
+        Ok (TestData internalTestData) ->
+            List.foldr andAlso Expect.pass internalTestData.expectations
 
         Err error ->
             Expect.fail error
