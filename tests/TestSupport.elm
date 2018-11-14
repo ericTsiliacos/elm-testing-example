@@ -1,9 +1,16 @@
-module TestSupport exposing (andExpectLastEffect, click, executeTests, expectView, testProgram, updateWith)
+module TestSupport exposing
+    ( andExpectLastEffect
+    , click
+    , executeTests
+    , expectView
+    , testProgram
+    , updateWith
+    )
 
 import Expect exposing (Expectation)
 import Html exposing (Html)
-import Test.Html.Event as Event exposing (click, simulate, toResult)
-import Test.Html.Query exposing (fromHtml)
+import Test.Html.Event as Event exposing (Event, click, simulate, toResult)
+import Test.Html.Query exposing (Single, fromHtml)
 
 
 type alias TestData model msg effect =
@@ -15,11 +22,17 @@ type alias TestData model msg effect =
     }
 
 
-type Program model msg
-    = Program { model : model, view : Test.Html.Query.Single msg }
-
-
-testProgram view update ( model, effect ) =
+testProgram :
+    { view : model -> Html msg
+    , update : msg -> model -> ( model, effect )
+    , init : ( model, effect )
+    }
+    -> TestData model msg effect
+testProgram { view, update, init } =
+    let
+        ( model, effect ) =
+            init
+    in
     { expectations = [ Expect.pass ]
     , view = view
     , update = update
@@ -28,6 +41,10 @@ testProgram view update ( model, effect ) =
     }
 
 
+run :
+    (Single msg -> Event msg)
+    -> TestData model msg effect
+    -> Result String (TestData model msg effect)
 run action testData =
     testData.model
         |> testData.view
@@ -38,6 +55,10 @@ run action testData =
         |> Result.map (\( updatedModel, effect ) -> { testData | model = updatedModel, effect = effect })
 
 
+andExpectLastEffect :
+    (effect -> Expectation)
+    -> Result String (TestData model msg effect)
+    -> Result String (TestData model msg effect)
 andExpectLastEffect expectation testDataResult =
     Result.map
         (\testData ->
@@ -46,6 +67,10 @@ andExpectLastEffect expectation testDataResult =
         testDataResult
 
 
+testView :
+    (Single msg -> Expectation)
+    -> TestData model msg effect
+    -> Result String (TestData model msg effect)
 testView expectation testData =
     testData.model
         |> testData.view
@@ -55,19 +80,32 @@ testView expectation testData =
         |> Ok
 
 
+updateWith :
+    msg
+    -> TestData model msg effect
+    -> Result String (TestData model msg effect)
 updateWith msg testData =
     testData.update msg testData.model
         |> (\( model, effect ) -> Ok { testData | model = model, effect = effect })
 
 
+expectView :
+    (Single msg -> Expectation)
+    -> TestData model msg effect
+    -> Result String (TestData model msg effect)
 expectView expectation testData =
     testView expectation testData
 
 
+click :
+    (Single msg -> Single msg)
+    -> TestData model msg effect
+    -> Result String (TestData model msg effect)
 click element =
     element >> simulate Event.click |> run
 
 
+executeTests : Result String (TestData model msg effect) -> Expectation
 executeTests result =
     case result of
         Ok testData ->

@@ -53,7 +53,11 @@ multiplier =
 
 
 application =
-    testProgram App.view App.update App.init
+    testProgram
+        { view = App.view
+        , update = App.update
+        , init = App.init
+        }
 
 
 suite : Test
