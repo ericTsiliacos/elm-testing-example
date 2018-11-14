@@ -1,9 +1,9 @@
-module TestSupport exposing (..)
+module TestSupport exposing (Program(..), TestData, andAlso, andExpectLastEffect, click, executeTests, expectView, run, testProgram, testView, thenRun, thenView, updateWith, verify)
 
-import Test.Html.Query exposing (fromHtml)
-import Test.Html.Event as Event exposing (toResult, click, simulate)
 import Expect exposing (Expectation)
 import Html exposing (Html)
+import Test.Html.Event as Event exposing (click, simulate, toResult)
+import Test.Html.Query exposing (fromHtml)
 
 
 type alias TestData model msg effect =
@@ -41,7 +41,7 @@ run action testData =
 andExpectLastEffect expectation testDataResult =
     Result.map
         (\testData ->
-            { testData | expectations = (expectation testData.effect) :: testData.expectations }
+            { testData | expectations = expectation testData.effect :: testData.expectations }
         )
         testDataResult
 
@@ -56,14 +56,14 @@ testView expectation testData =
         |> fromHtml
         |> expectation
         |> (\newExpectation -> { testData | expectations = newExpectation :: testData.expectations })
-        |> (\testData -> Ok testData)
+        |> Ok
 
 
 verify expectation testData =
     Program { model = testData.model, view = testData.model |> testData.view |> fromHtml }
         |> expectation
         |> (\newExpectation -> { testData | expectations = newExpectation :: testData.expectations })
-        |> (\testData -> Ok testData)
+        |> Ok
 
 
 updateWith msg testData =

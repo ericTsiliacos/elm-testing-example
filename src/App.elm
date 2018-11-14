@@ -1,4 +1,4 @@
-module App exposing (..)
+module App exposing (Effect(..), Model, Msg(..), bookTitleView, getWarAndPeace, httpGet, init, toCmd, update, view)
 
 import Html exposing (..)
 import Html.Events exposing (..)
@@ -58,6 +58,7 @@ update msg model =
         Decrement ->
             if model.count == 0 then
                 ( model, None )
+
             else
                 ( { model | count = model.count - 1 }, None )
 
@@ -68,8 +69,8 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div [] [ text ("count: " ++ (toString model.count)) ]
-        , div [] [ text ("multiplier: " ++ (toString (model.count * 2))) ]
+        [ div [] [ text ("count: " ++ String.fromInt model.count) ]
+        , div [] [ text ("multiplier: " ++ String.fromInt (model.count * 2)) ]
         , button [ onClick Increment ] [ text "+" ]
         , button [ onClick Decrement ] [ text "-" ]
         , bookTitleView model.bookTitleResult
@@ -86,4 +87,4 @@ bookTitleView bookTitleResult =
                 Err _ ->
                     ""
     in
-        div [] [ text ("book title: " ++ title) ]
+    div [] [ text ("book title: " ++ title) ]

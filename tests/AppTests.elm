@@ -1,24 +1,24 @@
-module AppTests exposing (..)
+module AppTests exposing (application, bookTitle, counter, decrement, increment, multiplier, suite)
 
+import App exposing (..)
 import Expect exposing (Expectation)
+import Result exposing (andThen, map)
 import Test exposing (..)
 import Test.Html.Query as Query exposing (..)
 import Test.Html.Selector exposing (..)
 import TestSupport
     exposing
-        ( thenView
-        , testProgram
+        ( andExpectLastEffect
+        , click
         , executeTests
+        , expectView
         , run
+        , testProgram
         , testView
         , thenRun
-        , andExpectLastEffect
+        , thenView
         , updateWith
-        , expectView
-        , click
         )
-import Result exposing (andThen, map)
-import App exposing (..)
 
 
 increment =
