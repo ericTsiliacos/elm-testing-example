@@ -3,9 +3,13 @@ module TestSupport exposing
     , click
     , executeTests
     , expectView
-    , testProgram
+    , initTestProgram
     , updateWith
     )
+
+{-| This library provides a way for testing the elm architecture while also
+making it possible to make more than one assertion in a test.
+-}
 
 import Expect exposing (Expectation)
 import Html exposing (Html)
@@ -23,13 +27,23 @@ type TestData model msg effect
         }
 
 
-testProgram :
+{-| Creates a testable application from your view, update, and init functions.
+
+    application =
+        initTestProgram
+            { view = App.view
+            , update = App.update
+            , init = App.init
+            }
+
+-}
+initTestProgram :
     { view : model -> Html msg
     , update : msg -> model -> ( model, effect )
     , init : ( model, effect )
     }
     -> TestData model msg effect
-testProgram { view, update, init } =
+initTestProgram { view, update, init } =
     let
         ( model, effect ) =
             init
@@ -43,24 +57,16 @@ testProgram { view, update, init } =
         }
 
 
-run :
-    (Single msg -> Event msg)
-    -> TestData model msg effect
-    -> Result String (TestData model msg effect)
-run action testData =
-    let
-        (TestData internalTestData) =
-            testData
-    in
-    internalTestData.model
-        |> internalTestData.view
-        |> fromHtml
-        |> action
-        |> toResult
-        |> Result.map (\msg -> internalTestData.update msg internalTestData.model)
-        |> Result.map (\( updatedModel, effect ) -> TestData { internalTestData | model = updatedModel, effect = effect })
+{-| Test what the last effect should be. Note, this library assumes that you
+have abstracted Cmd msg to some bounder of the application, and are only dealing
+with effects.
 
+application
+|> click increment
+|> andExpectLastEffect (Expect.equal (HttpGet getWarAndPeace NewBook))
+|> executeTests
 
+-}
 andExpectLastEffect :
     (effect -> Expectation)
     -> Result String (TestData model msg effect)
@@ -139,6 +145,24 @@ executeTests result =
 
         Err error ->
             Expect.fail error
+
+
+run :
+    (Single msg -> Event msg)
+    -> TestData model msg effect
+    -> Result String (TestData model msg effect)
+run action testData =
+    let
+        (TestData internalTestData) =
+            testData
+    in
+    internalTestData.model
+        |> internalTestData.view
+        |> fromHtml
+        |> action
+        |> toResult
+        |> Result.map (\msg -> internalTestData.update msg internalTestData.model)
+        |> Result.map (\( updatedModel, effect ) -> TestData { internalTestData | model = updatedModel, effect = effect })
 
 
 andAlso : Expectation -> Expectation -> Expectation

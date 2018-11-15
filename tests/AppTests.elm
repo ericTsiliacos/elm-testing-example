@@ -1,4 +1,4 @@
-module AppTests exposing (application, bookTitle, counter, decrement, increment, multiplier, suite)
+module AppTests exposing (suite)
 
 import App exposing (..)
 import Expect exposing (Expectation)
@@ -12,52 +12,9 @@ import TestSupport
         , click
         , executeTests
         , expectView
-        , testProgram
+        , initTestProgram
         , updateWith
         )
-
-
-increment =
-    find
-        [ tag "button"
-        , containing [ text "+" ]
-        ]
-
-
-decrement =
-    find
-        [ tag "button"
-        , containing [ text "-" ]
-        ]
-
-
-bookTitle =
-    find
-        [ tag "div"
-        , containing [ text "book title: " ]
-        ]
-
-
-counter =
-    find
-        [ tag "div"
-        , containing [ text "count" ]
-        ]
-
-
-multiplier =
-    find
-        [ tag "div"
-        , containing [ text "multiplier" ]
-        ]
-
-
-application =
-    testProgram
-        { view = App.view
-        , update = App.update
-        , init = App.init
-        }
 
 
 suite : Test
@@ -65,6 +22,44 @@ suite =
     describe "Application"
         [ test "increments the current count by 1" <|
             \_ ->
+                let
+                    application =
+                        initTestProgram
+                            { view = App.view
+                            , update = App.update
+                            , init = App.init
+                            }
+
+                    increment =
+                        find
+                            [ tag "button"
+                            , containing [ text "+" ]
+                            ]
+
+                    decrement =
+                        find
+                            [ tag "button"
+                            , containing [ text "-" ]
+                            ]
+
+                    bookTitle =
+                        find
+                            [ tag "div"
+                            , containing [ text "book title: " ]
+                            ]
+
+                    counter =
+                        find
+                            [ tag "div"
+                            , containing [ text "count" ]
+                            ]
+
+                    multiplier =
+                        find
+                            [ tag "div"
+                            , containing [ text "multiplier" ]
+                            ]
+                in
                 application
                     |> click increment
                     |> andExpectLastEffect (Expect.equal (HttpGet getWarAndPeace NewBook))
